@@ -20,9 +20,10 @@ type Commands struct {
 	Read struct {
 		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
 		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
-		Format   string `short:"f" long:"format" description:"Output format, can be txt, csv, json. Default std"`
+		Format   string `short:"f" long:"format" description:"Output format. Default txt"`
 		Interval int    `short:"i" long:"interval" description:"Read interval in millisecondsr"`
 	} `command:"read" description:"Read data from pzem-017 slaves"`
+	Formats struct {} `command:"show-formats" description:"Show available output formats"`
 }
 
 func closePort(handler *modbus.RTUClientHandler) {
@@ -90,6 +91,13 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 	}
 }
 
+func getFormatFactory() FormatterFactory {
+	factory := FormatterFactory{}
+	factory.add("txt", FormatTxt{eol: "\r"})
+	factory.add("txt-newline", FormatTxt{eol: "\n"})
+	return factory
+}
+
 func main() {
 	flags := Commands{}
 
@@ -104,7 +112,7 @@ func main() {
 			format = "txt"
 		}
 
-		formatter, err := formatterFactory(format)
+		formatter, err := getFormatFactory().getByName(format)
 
 		if err != nil {
 			fmt.Println(err.Error())
@@ -121,6 +129,14 @@ func main() {
 
 	_, _ = gocmd.HandleFlag("Scan", func(cmd *gocmd.Cmd, args []string) error {
 		scanForSlaves(flags.Scan.Port, time.Duration(flags.Scan.Timeout))
+		return nil
+	})
+
+	_, _ = gocmd.HandleFlag("Formats", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println("Available formats:")
+		for key, _ := range getFormatFactory().formatters {
+			fmt.Println(" * " + key)
+		}
 		return nil
 	})
 

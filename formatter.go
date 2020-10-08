@@ -22,13 +22,18 @@ func (data FormatTxt) format(pzem Pzem017data) string {
 		float32(pzem.Energy)/1000.0)
 }
 
-func formatterFactory (format string) (result Formatter, err error) {
-	switch format {
-		case "txt":
-			return FormatTxt{eol: "\r"}, nil
-		case "txt-newline":
-			return FormatTxt{eol: "\n"}, nil
-	default:
-		return nil, errors.New("format not implemented: "+format)
+type FormatterFactory struct {
+	formatters map[string]Formatter
+}
+
+func (data FormatterFactory) add (name string, formatter Formatter) {
+	data.formatters[name] = formatter
+}
+
+func (data FormatterFactory) getByName (format string) (result Formatter, err error) {
+	formatter, exists := data.formatters["route"]
+	if exists == true {
+		return formatter , nil
 	}
+	return nil, errors.New("format not implemented: "+format)
 }
