@@ -9,6 +9,22 @@ import (
 	"time"
 )
 
+type Commands struct {
+	List struct {
+		UsbOnly bool `short:"u" long:"usb" description:"Display USB only ports"`
+	} `command:"list" description:"Show list of available serial ports"`
+	Scan struct {
+		Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Timeout int64  `short:"t" long:"timeout"  description:"Timeout in milliseconds"`
+	} `command:"scan" description:"Scan for modbus slaves"`
+	Read struct {
+		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
+		Format   string `short:"f" long:"format" description:"Output format, can be txt, csv, json. Default std"`
+		Interval int    `short:"i" long:"interval" required:"true" description:"Read interval in millisecondsr"`
+	} `command:"read" description:"Read data from pzem-017 slaves"`
+}
+
 func closePort(handler *modbus.RTUClientHandler) {
 	err := handler.Close()
 	if err != nil {
@@ -54,7 +70,7 @@ func getHandlerWithTimeout(port string, slaveId byte, timeout time.Duration) *mo
 	return handler
 }
 
-func readData(port string, address byte, formatter Formatter) {
+func readData(port string, address byte, formatter Formatter, interval time.Duration) {
 	handler := getHandler(port, address)
 	defer closePort(handler)
 	_ = handler.Connect()
@@ -63,32 +79,19 @@ func readData(port string, address byte, formatter Formatter) {
 
 	for {
 		results, err := client.ReadInputRegisters(0, 8)
-		data := CreatePzem017FromBytes(results)
-
-		fmt.Printf(formatter.format(data))
-
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+		data := CreatePzem017FromBytes(results)
+
+		fmt.Printf(formatter.format(data))
+		time.Sleep(interval)
 	}
 }
 
 func main() {
-	flags := struct {
-		List struct {
-			UsbOnly bool `short:"u" long:"usb" description:"Display USB only ports"`
-		} `command:"list" description:"Show list of available serial ports"`
-		Scan struct {
-			Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
-			Timeout int64  `short:"t" long:"timeout"  description:"Timeout in milliseconds"`
-		} `command:"scan" description:"Scan for modbus slaves"`
-		Read struct {
-			Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
-			Address int `short:"a" long:"address" required:"true" description:"Slave address"`
-			Format string `short:"f" long:"format" description:"Output format, can be txt, csv, json. Default std"`
-		} `command:"read" description:"Read data from pzem-017 slaves"`
-	}{}
+	flags := Commands{}
 
 	_, _ = gocmd.HandleFlag("List", func(cmd *gocmd.Cmd, args []string) error {
 		printSerialList(flags.List.UsbOnly)
@@ -108,7 +111,11 @@ func main() {
 			return nil
 		}
 
-		readData(flags.Read.Port, byte(flags.Read.Address), formatter)
+		readData(
+			flags.Read.Port,
+			byte(flags.Read.Address),
+			formatter, time.Duration(flags.Read.Interval)*time.Millisecond)
+
 		return nil
 	})
 
