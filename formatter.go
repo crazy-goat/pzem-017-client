@@ -31,7 +31,7 @@ func (data FormatterFactory) add (name string, formatter Formatter) {
 }
 
 func (data FormatterFactory) getByName (format string) (result Formatter, err error) {
-	formatter, exists := data.formatters["route"]
+	formatter, exists := data.formatters[format]
 	if exists == true {
 		return formatter , nil
 	}
