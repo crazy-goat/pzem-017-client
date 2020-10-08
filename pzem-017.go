@@ -104,6 +104,7 @@ func main() {
 		} `command:"list" description:"Show list of available serial ports"`
 		Scan    struct {
 			Port string `short:"p" long:"port" required:"true" description:"Serial port"`
+			Timeout int64 `short:"t" long:"timeout"  description:"Timeout in milliseconds"`
 		} `command:"scan" description:"Scan for modbus slaves"`
 		Read    struct {
 			Port string `short:"p" long:"port" required:"true" description:"Serial port"`
@@ -118,7 +119,7 @@ func main() {
 	})
 
 	_, _ = gocmd.HandleFlag("Scan", func(cmd *gocmd.Cmd, args []string) error {
-		scanForSlaves(flags.Scan.Port)
+		scanForSlaves(flags.Scan.Port, time.Duration(flags.Scan.Timeout))
 		return nil
 	})
 
@@ -132,8 +133,9 @@ func main() {
 	})
 }
 
-func scanForSlaves(port string) {
+func scanForSlaves(port string, timeout time.Duration) {
 	fmt.Printf("Connecting port: %s\n", port)
+	fmt.Printf("Timeout: %d\n", timeout)
 	for address := 1; address < 127; address++ {
 		handler := getHandlerWithTimeout(port, byte(address), 250)
 		fmt.Printf("Address %02d: ", address)
