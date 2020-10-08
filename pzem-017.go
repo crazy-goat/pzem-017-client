@@ -84,7 +84,7 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 			fmt.Println(err)
 			return
 		}
-		data := CreatePzem017FromBytes(results)
+		data := CreatePzem017FromBytes(results, address)
 
 		fmt.Printf(formatter.format(data))
 		time.Sleep(interval)

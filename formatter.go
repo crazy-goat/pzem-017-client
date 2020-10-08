@@ -15,7 +15,9 @@ type FormatTxt struct {
 
 func (data FormatTxt) format(pzem Pzem017data) string {
 	return fmt.Sprintf(
-		"Voltage: %.2f V, Current: %.2f A, Power: %.1f W, Energy: %.3f kWh "+data.eol,
+		"Time: %s, Address: %d, Voltage: %.2f V, Current: %.2f A, Power: %.1f W, Energy: %.3f kWh "+data.eol,
+		pzem.Timestamp.Format("2006-01-02 15:04:05.000000"),
+		pzem.Address,
 		pzem.Voltage,
 		pzem.Current,
 		pzem.Power,
