@@ -133,6 +133,8 @@ func main() {
 }
 
 func scanForSlaves(port string, timeout time.Duration) {
+	found := 0
+
 	if timeout <= 0 {
 		timeout = time.Second
 	}
@@ -153,10 +155,11 @@ func scanForSlaves(port string, timeout time.Duration) {
 		if err != nil {
 			fmt.Print(err.Error() + "\r")
 		} else {
-
 			fmt.Println("Ok")
-
+			found++
 		}
 		_ = handler.Close()
 	}
+
+	fmt.Printf("Total slaves found: %d\r", found)
 }
