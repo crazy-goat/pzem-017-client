@@ -9,24 +9,6 @@ import (
 	"time"
 )
 
-type Pzem017data struct {
-	Voltage     float32
-	Current     float32
-	Power       float32
-	Energy      int
-	HighVoltage bool
-	LowVoltage  bool
-}
-
-func (p *Pzem017data) fromBytes(data []byte) {
-	p.Voltage = float32(int(data[0])<<8+int(data[1])) / 100.0
-	p.Current = float32(int(data[2])<<8+int(data[3])) / 100.0
-	p.Power = float32(int(data[6])<<24+int(data[7])<<16+int(data[4])<<8+int(data[5])) / 10.0
-	p.Energy = int(data[10])<<24 + int(data[11])<<16 + int(data[8])<<8 + int(data[9])
-	p.HighVoltage = data[12] == 255 && data[13] == 255
-	p.LowVoltage = data[14] == 255 && data[15] == 255
-}
-
 func closePort(handler *modbus.RTUClientHandler) {
 	err := handler.Close()
 	if err != nil {
@@ -72,8 +54,8 @@ func getHandlerWithTimeout(port string, slaveId byte, timeout time.Duration) *mo
 	return handler
 }
 
-func readData() {
-	handler := getHandler("/dev/ttyUSB01", 1)
+func readData(port string, address byte, formatter Formatter) {
+	handler := getHandler(port, address)
 	defer closePort(handler)
 	_ = handler.Connect()
 
@@ -81,15 +63,10 @@ func readData() {
 
 	for {
 		results, err := client.ReadInputRegisters(0, 8)
-		t := Pzem017data{}
-		t.fromBytes(results)
+		data := CreatePzem017FromBytes(results)
 
-		fmt.Printf(
-			"Voltage: %.2f V, Current: %.2f A, Power: %.1f W, Energy: %.3f kWh \r",
-			t.Voltage,
-			t.Current,
-			t.Power,
-			float32(t.Energy)/1000.0)
+		fmt.Printf(formatter.format(data))
+
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -108,12 +85,30 @@ func main() {
 		} `command:"scan" description:"Scan for modbus slaves"`
 		Read struct {
 			Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
-			Address string `short:"a" long:"address" required:"true" description:"Slave address, if more use 1,2,3"`
+			Address int `short:"a" long:"address" required:"true" description:"Slave address"`
+			Format string `short:"f" long:"format" description:"Output format, can be txt, csv, json. Default std"`
 		} `command:"read" description:"Read data from pzem-017 slaves"`
 	}{}
 
 	_, _ = gocmd.HandleFlag("List", func(cmd *gocmd.Cmd, args []string) error {
 		printSerialList(flags.List.UsbOnly)
+		return nil
+	})
+
+	_, _ = gocmd.HandleFlag("Read", func(cmd *gocmd.Cmd, args []string) error {
+		format := flags.Read.Format
+		if format == "" {
+			format = "txt"
+		}
+
+		formatter, err := formatterFactory(format)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return nil
+		}
+
+		readData(flags.Read.Port, byte(flags.Read.Address), formatter)
 		return nil
 	})
 
@@ -140,6 +135,7 @@ func scanForSlaves(port string, timeout time.Duration) {
 	}
 	fmt.Printf("Connecting port: %s\n", port)
 	fmt.Printf("Timeout: %.3f\n", float32(timeout*time.Millisecond)/float32(time.Second))
+
 	for address := 1; address < 127; address++ {
 		handler := getHandlerWithTimeout(port, byte(address), timeout)
 		fmt.Printf("Address %02d: ", address)
@@ -158,8 +154,8 @@ func scanForSlaves(port string, timeout time.Duration) {
 			fmt.Println("Ok")
 			found++
 		}
-		_ = handler.Close()
+		closePort(handler)
 	}
 
-	fmt.Printf("Total slaves found: %d\r", found)
+	fmt.Printf("Total slaves found: %d\n", found)
 }
