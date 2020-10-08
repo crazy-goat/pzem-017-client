@@ -16,6 +16,39 @@ type Pzem017data struct {
 	Timestamp   time.Time
 }
 
+type Pzem017config struct {
+	HighVoltageAlarm float64
+	LowVoltageAlarm float64
+	Address byte
+	Current int
+}
+
+func createPzem017ConfigFromBytes(input []byte) Pzem017config {
+	data := Pzem017config{}
+	data.HighVoltageAlarm = float64(int(input[0])<<8+int(input[1])) / 100.0
+	data.LowVoltageAlarm = float64(int(input[2])<<8+int(input[3])) / 100.0
+	data.Address = input[5]
+
+	switch input[7] {
+	case 0:
+		data.Current = 100
+	case 1:
+		data.Current = 50
+	case 2:
+		data.Current = 200
+	case 3:
+		data.Current = 300
+	default:
+		data.Current = -1
+	}
+	
+	return data
+}
+
+func (data Pzem017config) validate() bool {
+	return data.Address <= 127 && data.Current > 0
+}
+
 func (data Pzem017data) validate() bool {
 	return math.Abs(float64(data.Power-(data.Current*data.Voltage))) < 1.0
 }

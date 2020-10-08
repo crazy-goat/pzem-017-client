@@ -174,14 +174,14 @@ func scanForSlaves(port string, timeout time.Duration) {
 		}
 
 		client := modbus.NewClient(handler)
-		data, err := client.ReadInputRegisters(0, 8)
+		data, err := client.ReadHoldingRegisters(0, 4)
 
 		if err != nil {
 			fmt.Print(err.Error() + "\r")
 		} else {
 			fmt.Print("device found, checking response: ")
 
-			if CreatePzem017FromBytes(data, byte(address)).validate() == true {
+			if createPzem017ConfigFromBytes(data).validate() == true {
 				fmt.Println("Ok")
 				found++
 			} else {
