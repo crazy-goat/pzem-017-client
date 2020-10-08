@@ -159,7 +159,7 @@ func scanForSlaves(port string, timeout time.Duration) {
 	found := 0
 
 	if timeout <= 0 {
-		timeout = time.Second
+		timeout = time.Duration(100)
 	}
 	fmt.Printf("Connecting port: %s\n", port)
 	fmt.Printf("Timeout: %.3f\n", float32(timeout*time.Millisecond)/float32(time.Second))
