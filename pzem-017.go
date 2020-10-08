@@ -85,8 +85,13 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 			return
 		}
 		data := CreatePzem017FromBytes(results, address)
+		if data.validate() == false{
+			fmt.Println("Invalid data")
+		} else {
+			fmt.Printf(formatter.format(data))
+		}
 
-		fmt.Printf(formatter.format(data))
+
 		time.Sleep(interval)
 	}
 }

@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 type Pzem017data struct {
 	Voltage     float32
@@ -11,6 +14,10 @@ type Pzem017data struct {
 	LowVoltage  bool
 	Address		byte
 	Timestamp   time.Time
+}
+
+func (data Pzem017data) validate() bool {
+	return math.Abs(float64(data.Power-(data.Current*data.Voltage))) < 1.0
 }
 
 func CreatePzem017FromBytes(input []byte, address byte) Pzem017data {
