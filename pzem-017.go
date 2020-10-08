@@ -99,19 +99,18 @@ func readData() {
 
 func main() {
 	flags := struct {
-		List    struct {
+		List struct {
 			UsbOnly bool `short:"u" long:"usb" description:"Display USB only ports"`
 		} `command:"list" description:"Show list of available serial ports"`
-		Scan    struct {
-			Port string `short:"p" long:"port" required:"true" description:"Serial port"`
-			Timeout int64 `short:"t" long:"timeout"  description:"Timeout in milliseconds"`
+		Scan struct {
+			Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
+			Timeout int64  `short:"t" long:"timeout"  description:"Timeout in milliseconds"`
 		} `command:"scan" description:"Scan for modbus slaves"`
-		Read    struct {
-			Port string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Read struct {
+			Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
 			Address string `short:"a" long:"address" required:"true" description:"Slave address, if more use 1,2,3"`
 		} `command:"read" description:"Read data from pzem-017 slaves"`
 	}{}
-
 
 	_, _ = gocmd.HandleFlag("List", func(cmd *gocmd.Cmd, args []string) error {
 		printSerialList(flags.List.UsbOnly)
@@ -138,13 +137,13 @@ func scanForSlaves(port string, timeout time.Duration) {
 		timeout = time.Second
 	}
 	fmt.Printf("Connecting port: %s\n", port)
-	fmt.Printf("Timeout: %.3f\n", float32(float32(timeout * time.Millisecond)/float32(time.Second)))
+	fmt.Printf("Timeout: %.3f\n", float32(timeout*time.Millisecond/time.Second))
 	for address := 1; address < 127; address++ {
 		handler := getHandlerWithTimeout(port, byte(address), timeout)
 		fmt.Printf("Address %02d: ", address)
 		err := handler.Connect()
 		if err != nil {
-			fmt.Println("error while connecting \""+err.Error()+"\". Exiting")
+			fmt.Println("error while connecting \"" + err.Error() + "\". Exiting")
 			return
 		}
 
@@ -152,12 +151,12 @@ func scanForSlaves(port string, timeout time.Duration) {
 		_, err = client.ReadInputRegisters(0, 8)
 
 		if err != nil {
-			fmt.Print(err.Error()+"\r")
+			fmt.Print(err.Error() + "\r")
 		} else {
 
-		fmt.Println("Ok")
+			fmt.Println("Ok")
 
-}
+		}
 		_ = handler.Close()
 	}
 }
