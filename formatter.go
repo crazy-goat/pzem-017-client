@@ -9,11 +9,13 @@ type Formatter interface {
 	format(data Pzem017data) string
 }
 
-type FormatTxt struct {}
+type FormatTxt struct {
+	eol string
+}
 
 func (data FormatTxt) format(pzem Pzem017data) string {
 	return fmt.Sprintf(
-		"Voltage: %.2f V, Current: %.2f A, Power: %.1f W, Energy: %.3f kWh \r",
+		"Voltage: %.2f V, Current: %.2f A, Power: %.1f W, Energy: %.3f kWh "+data.eol,
 		pzem.Voltage,
 		pzem.Current,
 		pzem.Power,
@@ -23,7 +25,9 @@ func (data FormatTxt) format(pzem Pzem017data) string {
 func formatterFactory (format string) (result Formatter, err error) {
 	switch format {
 		case "txt":
-			return FormatTxt{}, nil
+			return FormatTxt{eol: "\r"}, nil
+		case "txt-newline":
+			return FormatTxt{eol: "\n"}, nil
 	default:
 		return nil, errors.New("format not implemented: "+format)
 	}
