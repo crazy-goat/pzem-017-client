@@ -134,10 +134,13 @@ func main() {
 }
 
 func scanForSlaves(port string, timeout time.Duration) {
+	if timeout <= 0 {
+		timeout = time.Second
+	}
 	fmt.Printf("Connecting port: %s\n", port)
-	fmt.Printf("Timeout: %d\n", timeout)
+	fmt.Printf("Timeout: %.3f\n", float32(float32(timeout * time.Millisecond)/float32(time.Second)))
 	for address := 1; address < 127; address++ {
-		handler := getHandlerWithTimeout(port, byte(address), 250)
+		handler := getHandlerWithTimeout(port, byte(address), timeout)
 		fmt.Printf("Address %02d: ", address)
 		err := handler.Connect()
 		if err != nil {
@@ -149,11 +152,12 @@ func scanForSlaves(port string, timeout time.Duration) {
 		_, err = client.ReadInputRegisters(0, 8)
 
 		if err != nil {
-			fmt.Println(err.Error())
-		}
+			fmt.Print(err.Error()+"\r")
+		} else {
 
 		fmt.Println("Ok")
 
+}
 		_ = handler.Close()
 	}
 }
