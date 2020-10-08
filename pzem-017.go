@@ -92,7 +92,7 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 }
 
 func getFormatFactory() FormatterFactory {
-	factory := FormatterFactory{}
+	factory := FormatterFactory{formatters: make(map[string]Formatter)}
 	factory.add("txt", FormatTxt{eol: "\r"})
 	factory.add("txt-newline", FormatTxt{eol: "\n"})
 	return factory
