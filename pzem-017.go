@@ -56,7 +56,7 @@ func printSerialList(UsbOnly bool) {
 }
 
 func getHandler(port string, slaveId byte) *modbus.RTUClientHandler {
-	return getHandlerWithTimeout(port, slaveId, 5)
+	return getHandlerWithTimeout(port, slaveId, 5000)
 }
 
 func getHandlerWithTimeout(port string, slaveId byte, timeout time.Duration) *modbus.RTUClientHandler {
@@ -67,7 +67,7 @@ func getHandlerWithTimeout(port string, slaveId byte, timeout time.Duration) *mo
 	handler.Parity = "N"
 	handler.StopBits = 2
 	handler.SlaveId = slaveId
-	handler.Timeout = timeout * time.Second
+	handler.Timeout = timeout * time.Millisecond
 
 	return handler
 }
@@ -98,7 +98,6 @@ func readData() {
 }
 
 func main() {
-	scanForSlaves("");
 	flags := struct {
 		List    struct {
 			UsbOnly bool `short:"u" long:"usb" description:"Display USB only ports"`
@@ -118,7 +117,7 @@ func main() {
 		return nil
 	})
 
-	_, _ = gocmd.HandleFlag("List", func(cmd *gocmd.Cmd, args []string) error {
+	_, _ = gocmd.HandleFlag("Scan", func(cmd *gocmd.Cmd, args []string) error {
 		scanForSlaves(flags.Scan.Port)
 		return nil
 	})
@@ -134,8 +133,9 @@ func main() {
 }
 
 func scanForSlaves(port string) {
+	fmt.Printf("Connecting port: %s\n", port)
 	for address := 1; address < 127; address++ {
-		handler := getHandlerWithTimeout(port, byte(address), 1)
+		handler := getHandlerWithTimeout(port, byte(address), 250)
 		fmt.Printf("Address %02d: ", address)
 		err := handler.Connect()
 		if err != nil {
@@ -147,7 +147,7 @@ func scanForSlaves(port string) {
 		_, err = client.ReadInputRegisters(0, 8)
 
 		if err != nil {
-			fmt.Println("Timeout")
+			fmt.Println(err.Error())
 		}
 
 		_ = handler.Close()
