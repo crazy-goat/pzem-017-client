@@ -180,9 +180,14 @@ func scanForSlaves(port string, timeout time.Duration) {
 			fmt.Print(err.Error() + "\r")
 		} else {
 			fmt.Print("device found, checking response: ")
-
-			if createPzem017ConfigFromBytes(data).validate() == true {
+			config := createPzem017ConfigFromBytes(data)
+			if config.validate() == true {
 				fmt.Println("Ok")
+				fmt.Println("Settings:")
+				fmt.Printf(" * Modbus-RTU address:  %d\n", config.Address)
+				fmt.Printf(" * High voltage alarm:  %.2f\n", config.HighVoltageAlarm)
+				fmt.Printf(" * Low voltage alarm:   %.2f\n", config.LowVoltageAlarm)
+				fmt.Printf(" * The current range:   %d\n", config.Current)
 				found++
 			} else {
 				fmt.Println("Bad response")
