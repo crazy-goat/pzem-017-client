@@ -21,7 +21,7 @@ type Commands struct {
 		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
 		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
 		Format   string `short:"f" long:"format" description:"Output format, can be txt, csv, json. Default std"`
-		Interval int    `short:"i" long:"interval" required:"true" description:"Read interval in millisecondsr"`
+		Interval int    `short:"i" long:"interval" description:"Read interval in millisecondsr"`
 	} `command:"read" description:"Read data from pzem-017 slaves"`
 }
 
