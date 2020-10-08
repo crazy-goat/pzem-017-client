@@ -150,6 +150,8 @@ func scanForSlaves(port string) {
 			fmt.Println(err.Error())
 		}
 
+		fmt.Println("Ok")
+
 		_ = handler.Close()
 	}
 }
