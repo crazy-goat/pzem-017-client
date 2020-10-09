@@ -164,7 +164,7 @@ func main() {
 		return err
 	})
 
-	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
+	_, _ = gocmd.HandleFlag("ReadConfig", func(cmd *gocmd.Cmd, args []string) error {
 		return configRead(flags.Reset.Port, byte(flags.Reset.Address))
 	})
 
