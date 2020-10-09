@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/devfacet/gocmd"
 	"github.com/goburrow/modbus"
@@ -23,6 +24,10 @@ type Commands struct {
 		Format   string `short:"f" long:"format" description:"Output format. Default txt"`
 		Interval int    `short:"i" long:"interval" description:"Read interval in millisecondsr"`
 	} `command:"read" description:"Read data from pzem-017 slaves"`
+	Reset struct{
+		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
+	} `command:"reset" description:"Set energy counter to 0"`
 	Formats struct {} `command:"show-formats" description:"Show available output formats"`
 }
 
@@ -32,6 +37,7 @@ func closePort(handler *modbus.RTUClientHandler) {
 		fmt.Println(err.Error())
 	}
 }
+
 
 func printSerialList(UsbOnly bool) {
 	ports, err := enumerator.GetDetailedPortsList()
@@ -145,6 +151,10 @@ func main() {
 		return nil
 	})
 
+	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
+		return resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
+	})
+
 	// Init the app
 	_, _ = gocmd.New(gocmd.Options{
 		Name:        "pzem-017-client",
@@ -155,6 +165,67 @@ func main() {
 	})
 }
 
+func resetEnergy(port string, address byte) error {
+	handler := getHandler(port, address)
+
+	defer closePort(handler)
+	err := handler.Connect()
+	if err != nil {
+		return nil
+	}
+
+	request := modbus.ProtocolDataUnit{
+		FunctionCode: 0x42,
+		Data:         dataBlock(uint16(address)),
+	}
+	response, err := send(handler, &request)
+
+	if err != nil {
+		return err
+	}
+
+	if len(response.Data) != 0 {
+		return fmt.Errorf("modbus: response data size '%v' does not match expected '%v'", len(response.Data), 0)
+	}
+
+	return nil
+}
+func send(handler modbus.ClientHandler, request *modbus.ProtocolDataUnit) (response *modbus.ProtocolDataUnit, err error) {
+	aduRequest, err := handler.Encode(request)
+	if err != nil {
+		return
+	}
+	aduResponse, err := handler.Send(aduRequest)
+	if err != nil {
+		return
+	}
+	if err = handler.Verify(aduRequest, aduResponse); err != nil {
+		return
+	}
+	response, err = handler.Decode(aduResponse)
+	if err != nil {
+		return
+	}
+	// Check correct function code returned (exception)
+	if response.FunctionCode != request.FunctionCode {
+		err = fmt.Errorf("modbus: response with different code")
+		return
+	}
+	if response.Data == nil || len(response.Data) == 0 {
+		// Empty response
+		err = fmt.Errorf("modbus: response data is empty")
+		return
+	}
+	return
+}
+
+func dataBlock(value ...uint16) []byte {
+	data := make([]byte, 2*len(value))
+	for i, v := range value {
+		binary.BigEndian.PutUint16(data[i*2:], v)
+	}
+	return data
+}
 func scanForSlaves(port string, timeout time.Duration) {
 	found := 0
 
@@ -185,9 +256,9 @@ func scanForSlaves(port string, timeout time.Duration) {
 				fmt.Println("Ok")
 				fmt.Println("Settings:")
 				fmt.Printf(" * Modbus-RTU address:  %d\n", config.Address)
-				fmt.Printf(" * High voltage alarm:  %.2f\n", config.HighVoltageAlarm)
-				fmt.Printf(" * Low voltage alarm:   %.2f\n", config.LowVoltageAlarm)
-				fmt.Printf(" * The current range:   %d\n", config.Current)
+				fmt.Printf(" * High voltage alarm:  %.2f V\n", config.HighVoltageAlarm)
+				fmt.Printf(" * Low voltage alarm:   %.2f V\n", config.LowVoltageAlarm)
+				fmt.Printf(" * The current range:   %d A\n", config.Current)
 				found++
 			} else {
 				fmt.Println("Bad response")
