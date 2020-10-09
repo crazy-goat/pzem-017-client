@@ -152,7 +152,12 @@ func main() {
 	})
 
 	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
-		return resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
+		err := resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
+		if err != nil {
+			fmt.Println("Energy meter set to 0")
+		}
+
+		return err
 	})
 
 	// Init the app
@@ -184,8 +189,13 @@ func resetEnergy(port string, address byte) error {
 		return err
 	}
 
-	if len(response.Data) != 0 {
-		return fmt.Errorf("modbus: response data size '%v' does not match expected '%v'", len(response.Data), 0)
+	if len(response.Data) != 2 {
+		return fmt.Errorf("modbus: response data size '%v' does not match expected '%v'", len(response.Data), 2)
+	}
+
+	respValue := binary.BigEndian.Uint16(response.Data)
+	if uint16(address) != respValue {
+		return  fmt.Errorf("modbus: response address '%v' does not match request '%v'", respValue, address)
 	}
 
 	return nil
