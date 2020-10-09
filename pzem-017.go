@@ -28,6 +28,10 @@ type Commands struct {
 		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
 		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
 	} `command:"reset" description:"Set energy counter to 0"`
+	ReadConfig struct{
+		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
+	} `command:"config-get" description:"Get PZEM-107 config"`
 	Formats struct {} `command:"show-formats" description:"Show available output formats"`
 }
 
@@ -153,11 +157,15 @@ func main() {
 
 	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
 		err := resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
-		if err != nil {
+		if err == nil {
 			fmt.Println("Energy meter set to 0")
 		}
 
 		return err
+	})
+
+	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
+		return configRead(flags.Reset.Port, byte(flags.Reset.Address))
 	})
 
 	// Init the app
@@ -168,6 +176,25 @@ func main() {
 		Flags:       &flags,
 		ConfigType:  gocmd.ConfigTypeAuto,
 	})
+}
+
+func configRead(port string, address byte) error {
+	handler := getHandler(port, address)
+	err := handler.Connect()
+	if err != nil {
+		return fmt.Errorf("error while connecting: %s", err.Error())
+	}
+
+	client := modbus.NewClient(handler)
+	data, err := client.ReadHoldingRegisters(0, 4)
+	if err != nil {
+		return fmt.Errorf("error while reading config registers: %s", err.Error())
+	}
+
+	config := createPzem017ConfigFromBytes(data)
+	printConfig(config)
+
+	return nil
 }
 
 func resetEnergy(port string, address byte) error {
@@ -264,11 +291,7 @@ func scanForSlaves(port string, timeout time.Duration) {
 			config := createPzem017ConfigFromBytes(data)
 			if config.validate() == true {
 				fmt.Println("Ok")
-				fmt.Println("Settings:")
-				fmt.Printf(" * Modbus-RTU address:  %d\n", config.Address)
-				fmt.Printf(" * High voltage alarm:  %.2f V\n", config.HighVoltageAlarm)
-				fmt.Printf(" * Low voltage alarm:   %.2f V\n", config.LowVoltageAlarm)
-				fmt.Printf(" * The current range:   %d A\n", config.Current)
+				printConfig(config)
 				found++
 			} else {
 				fmt.Println("Bad response")
@@ -278,4 +301,12 @@ func scanForSlaves(port string, timeout time.Duration) {
 	}
 
 	fmt.Printf("Total slaves found: %d\n", found)
+}
+
+func printConfig(config Pzem017config)  {
+	fmt.Println("Settings:")
+	fmt.Printf(" * Modbus-RTU address:  %d\n", config.Address)
+	fmt.Printf(" * High voltage alarm:  %.2f V\n", config.HighVoltageAlarm)
+	fmt.Printf(" * Low voltage alarm:   %.2f V\n", config.LowVoltageAlarm)
+	fmt.Printf(" * The current range:   %d A\n", config.Current)
 }
