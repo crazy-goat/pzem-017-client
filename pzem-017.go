@@ -102,7 +102,7 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 			fmt.Printf(formatter.format(data))
 		}
 
-		sleep := time.Now().Sub(start)-interval
+		sleep := interval - time.Now().Sub(start)
 		if sleep < 0 {
 			sleep = 0
 		}
