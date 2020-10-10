@@ -50,7 +50,7 @@ func (di *serveJson) indexController(w http.ResponseWriter, req *http.Request) {
 	}
 
 	data.Address = di.Address
-	response := data.createJson("")
+	response := data.createJson(di.Name)
 
 	js, err := json.Marshal(response)
 	if err != nil {
