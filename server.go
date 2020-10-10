@@ -9,13 +9,13 @@ import (
 )
 
 type Pzem017json struct {
-	Voltage     float32
-	Current     float32
-	Power       float32
-	Energy      int
-	HighVoltage bool
-	LowVoltage  bool
-	Name        string
+	Voltage     float32 `json:"voltage"`
+	Current     float32 `json:"current"`
+	Power       float32 `json:"power"`
+	Energy      int     `json:"energy"`
+	HighVoltage bool    `json:"high_voltage_alarm"`
+	LowVoltage  bool    `json:"low_voltage_alarm"`
+	Name        string  `json:"name"`
 }
 
 type serveJson struct {
@@ -73,8 +73,8 @@ func registerCommandServer(flags *Commands) {
 		defer closePort(handler)
 		_ = handler.Connect()
 		controller := &serveJson{
-			Name:   flags.Http.Name,
-			Client: modbus.NewClient(handler),
+			Name:    flags.Http.Name,
+			Client:  modbus.NewClient(handler),
 			Address: byte(flags.Http.Address)}
 
 		http.HandleFunc("/", controller.indexController)
