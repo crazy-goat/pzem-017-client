@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/devfacet/gocmd"
 	"github.com/goburrow/modbus"
@@ -17,17 +18,13 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 	for {
 		start := time.Now()
 
-		results, err := client.ReadInputRegisters(0, 8)
+		data, err := readSingleMeasurement(client)
 		if err != nil {
-			fmt.Println(err)
-			return
+			fmt.Println(err.Error())
+			continue
 		}
-		data := CreatePzem017FromBytes(results, address)
-		if data.validate() == false{
-			fmt.Println("Invalid data")
-		} else {
-			fmt.Printf(formatter.format(data))
-		}
+		data.Address = address
+		fmt.Print(formatter.format(data))
 
 		sleep := interval - time.Now().Sub(start)
 		if sleep < 0 {
@@ -36,6 +33,20 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 
 		time.Sleep(sleep)
 	}
+}
+
+func readSingleMeasurement(client modbus.Client) (data Pzem017data, err error) {
+	results, err := client.ReadInputRegisters(0, 8)
+	if err != nil {
+		return Pzem017data{}, err
+	}
+
+	data = CreatePzem017FromBytes(results)
+	if data.validate() == false {
+		return Pzem017data{}, errors.New("Invalid data")
+	}
+
+	return data, nil
 }
 
 func registerCommandRead(flags *Commands) {

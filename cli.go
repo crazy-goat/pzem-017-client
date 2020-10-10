@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/devfacet/gocmd"
-)
+import "github.com/devfacet/gocmd"
 
 type Commands struct {
 	List struct {
@@ -18,15 +16,21 @@ type Commands struct {
 		Format   string `short:"f" long:"format" description:"Output format. Default txt"`
 		Interval int    `short:"i" long:"interval" description:"Read interval in millisecondsr"`
 	} `command:"read" description:"Read data from pzem-017 slaves"`
-	Reset struct{
-		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
-		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
+	Reset struct {
+		Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Address int    `short:"a" long:"address" required:"true" description:"Slave address"`
 	} `command:"reset" description:"Set energy counter to 0"`
-	ReadConfig struct{
+	ReadConfig struct {
+		Port    string `short:"p" long:"port" required:"true" description:"Serial port"`
+		Address int    `short:"a" long:"address" required:"true" description:"Slave address"`
+	} `command:"config-get" description:"Get PZEM-107 config"`
+	Http struct {
 		Port     string `short:"p" long:"port" required:"true" description:"Serial port"`
 		Address  int    `short:"a" long:"address" required:"true" description:"Slave address"`
-	} `command:"config-get" description:"Get PZEM-107 config"`
-	Formats struct {} `command:"show-formats" description:"Show available output formats"`
+		HttpPort int    `short:"P" long:"http-port" required:"true" description:"Http port"`
+		Name     string `short:"n" long:"name" description:"Device name"`
+	} `command:"http-server" description:"Http api"`
+	Formats struct{} `command:"show-formats" description:"Show available output formats"`
 }
 
 func registerCli() {
@@ -38,6 +42,7 @@ func registerCli() {
 	registerCommandFormats(&flags)
 	registerCommandReset(&flags)
 	registerCommandReadConfig(&flags)
+	registerCommandServer(&flags)
 
 	// Init the app
 	_, _ = gocmd.New(gocmd.Options{
