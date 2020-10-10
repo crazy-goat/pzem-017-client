@@ -13,8 +13,8 @@ type Pzem017json struct {
 	Current     float32 `json:"current"`
 	Power       float32 `json:"power"`
 	Energy      int     `json:"energy"`
-	HighVoltage bool    `json:"high_voltage_alarm"`
-	LowVoltage  bool    `json:"low_voltage_alarm"`
+	HighVoltage int    `json:"high_voltage_alarm"`
+	LowVoltage  int    `json:"low_voltage_alarm"`
 	Name        string  `json:"name"`
 }
 
@@ -31,8 +31,14 @@ func (data Pzem017data) createJson(name string) Pzem017json {
 	jsonData.Voltage = data.Voltage
 	jsonData.Power = data.Power
 	jsonData.Energy = data.Energy
-	jsonData.HighVoltage = data.HighVoltage
-	jsonData.LowVoltage = data.LowVoltage
+	if data.HighVoltage {
+		jsonData.HighVoltage = 1
+	}
+
+	if data.LowVoltage {
+		jsonData.LowVoltage = 1
+	}
+
 	if name == "" {
 		jsonData.Name = fmt.Sprintf("%d", data.Address)
 	} else {
