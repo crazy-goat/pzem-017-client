@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/devfacet/gocmd"
 )
 
 type Formatter interface {
@@ -38,4 +39,21 @@ func (data FormatterFactory) getByName (format string) (result Formatter, err er
 		return formatter , nil
 	}
 	return nil, errors.New("format not implemented: "+format)
+}
+
+func getFormatFactory() FormatterFactory {
+	factory := FormatterFactory{formatters: make(map[string]Formatter)}
+	factory.add("txt", FormatTxt{eol: "\r"})
+	factory.add("txt-newline", FormatTxt{eol: "\n"})
+	return factory
+}
+
+func registerCommandFormats(flags Commands) {
+	_, _ = gocmd.HandleFlag("Formats", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println("Available formats:")
+		for key, _ := range getFormatFactory().formatters {
+			fmt.Println(" * " + key)
+		}
+		return nil
+	})
 }

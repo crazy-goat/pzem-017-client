@@ -3,8 +3,20 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/devfacet/gocmd"
 	"github.com/goburrow/modbus"
 )
+
+func registerCommandReset(flags Commands) {
+	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
+		err := resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
+		if err == nil {
+			fmt.Println("Energy meter set to 0")
+		}
+
+		return err
+	})
+}
 
 func resetEnergy(port string, address byte) error {
 	handler := getHandler(port, address)
