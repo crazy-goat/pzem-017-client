@@ -25,21 +25,21 @@ type serveJson struct {
 }
 
 func (data Pzem017data) createJson(name string) Pzem017json {
-	json := Pzem017json{}
+	jsonData := Pzem017json{}
 
-	json.Current = data.Current
-	json.Voltage = data.Voltage
-	json.Power = data.Power
-	json.Energy = data.Energy
-	json.HighVoltage = data.HighVoltage
-	json.LowVoltage = data.LowVoltage
+	jsonData.Current = data.Current
+	jsonData.Voltage = data.Voltage
+	jsonData.Power = data.Power
+	jsonData.Energy = data.Energy
+	jsonData.HighVoltage = data.HighVoltage
+	jsonData.LowVoltage = data.LowVoltage
 	if name == "" {
-		json.Name = fmt.Sprintf("%d", data.Address)
+		jsonData.Name = fmt.Sprintf("%d", data.Address)
 	} else {
-		json.Name = name
+		jsonData.Name = name
 	}
 
-	return json
+	return jsonData
 }
 
 func (di *serveJson) indexController(w http.ResponseWriter, req *http.Request) {
