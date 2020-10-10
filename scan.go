@@ -70,14 +70,14 @@ func printSerialList(UsbOnly bool) {
 	}
 }
 
-func registerCommandScan(flags Commands) {
+func registerCommandScan(flags *Commands) {
 	_, _ = gocmd.HandleFlag("Scan", func(cmd *gocmd.Cmd, args []string) error {
 		scanForSlaves(flags.Scan.Port, time.Duration(flags.Scan.Timeout))
 		return nil
 	})
 }
 
-func registerCommandList(flags Commands) {
+func registerCommandList(flags *Commands) {
 	_, _ = gocmd.HandleFlag("List", func(cmd *gocmd.Cmd, args []string) error {
 		printSerialList(flags.List.UsbOnly)
 		return nil

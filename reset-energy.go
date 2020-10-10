@@ -7,7 +7,7 @@ import (
 	"github.com/goburrow/modbus"
 )
 
-func registerCommandReset(flags Commands) {
+func registerCommandReset(flags *Commands) {
 	_, _ = gocmd.HandleFlag("Reset", func(cmd *gocmd.Cmd, args []string) error {
 		err := resetEnergy(flags.Reset.Port, byte(flags.Reset.Address))
 		if err == nil {

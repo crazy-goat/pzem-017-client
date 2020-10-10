@@ -48,7 +48,7 @@ func getFormatFactory() FormatterFactory {
 	return factory
 }
 
-func registerCommandFormats(flags Commands) {
+func registerCommandFormats(flags *Commands) {
 	_, _ = gocmd.HandleFlag("Formats", func(cmd *gocmd.Cmd, args []string) error {
 		fmt.Println("Available formats:")
 		for key, _ := range getFormatFactory().formatters {

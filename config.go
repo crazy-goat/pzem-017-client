@@ -6,7 +6,7 @@ import (
 	"github.com/goburrow/modbus"
 )
 
-func registerCommandReadConfig(flags Commands) {
+func registerCommandReadConfig(flags *Commands) {
 	_, _ = gocmd.HandleFlag("ReadConfig", func(cmd *gocmd.Cmd, args []string) error {
 		return configRead(flags.ReadConfig.Port, byte(flags.ReadConfig.Address))
 	})

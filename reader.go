@@ -38,7 +38,7 @@ func readData(port string, address byte, formatter Formatter, interval time.Dura
 	}
 }
 
-func registerCommandRead(flags Commands) {
+func registerCommandRead(flags *Commands) {
 	_, _ = gocmd.HandleFlag("Read", func(cmd *gocmd.Cmd, args []string) error {
 		format := flags.Read.Format
 		if format == "" {

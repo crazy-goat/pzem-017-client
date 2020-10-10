@@ -32,12 +32,12 @@ type Commands struct {
 func registerCli() {
 	flags := Commands{}
 
-	registerCommandRead(flags)
-	registerCommandList(flags)
-	registerCommandScan(flags)
-	registerCommandFormats(flags)
-	registerCommandReset(flags)
-	registerCommandReadConfig(flags)
+	registerCommandRead(&flags)
+	registerCommandList(&flags)
+	registerCommandScan(&flags)
+	registerCommandFormats(&flags)
+	registerCommandReset(&flags)
+	registerCommandReadConfig(&flags)
 
 	// Init the app
 	_, _ = gocmd.New(gocmd.Options{
